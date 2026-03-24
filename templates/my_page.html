@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Рабочая зона</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            background-color: #D9D9D9;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 255px;
+            background-color: white;
+            height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+            position: fixed;
+            left: 0;
+            top: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .nav-links {
+            list-style: none;
+            padding: 0;
+            margin-top: 20px;
+            flex-grow: 1;
+        }
+
+        .nav-links li {
+            margin-bottom: 0px;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: black;
+            font-size: 18px;
+            font-weight: bold;
+            display: block;
+            padding: 8px 0;
+        }
+
+        .nav-links a:hover {
+            color: #555;
+        }
+
+        .logout-container {
+            margin-top: auto;
+            padding-bottom: 20px;
+        }
+
+        .logout-container a {
+            color: black
+        }
+
+        .logout-container a:hover {
+            color: #4F4F4F;
+        }
+
+        .main-content {
+            flex: 1;
+            margin-left: 255px;
+            width: calc(100% - 255px);
+            box-sizing: border-box;
+            min-height: 100vh;
+            padding: 40px 40px 40px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .profile-form-container {
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .photo-container {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+            margin-left: 20px;
+        }
+
+        .photo-upload {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .photo-upload img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .photo-upload input[type="file"] {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .photo-placeholder {
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .form-container {
+            width: 100%;
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #4F4F4F;
+            font-size: 16px;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+
+        .form-group textarea {
+            height: 100px;
+            resize: vertical;
+            font-family: Arial, sans-serif;
+        }
+
+        .form-actions {
+            text-align: left;
+        }
+
+        .save-btn {
+            background-color: #4F4F4F;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .save-btn:hover {
+            background-color: #3a3a3a;
+        }
+
+        .change-password {
+            display: inline-block;
+            margin-top: 15px;
+            color: #4F4F4F;
+            text-decoration: none;
+            font-size: 16px;
+        }
+
+        .change-password:hover {
+            text-decoration: underline;
+        }
+
+        .flash-messages {
+            position: absolute;
+            top: 20px;
+            width: 100%;
+            max-width: 796px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 100;
+        }
+
+        .flash {
+            padding: 15px;
+            border-radius: 9px;
+            text-align: center;
+            font-size: 16px;
+            font-weight: bold;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .flash.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .flash.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <ul class="nav-links">
+            <li><a href="{{ url_for('users.my_profile') }}">Моя страница</a></li>
+            <li><a href="#">Встречи</a></li>
+            <li><a href="{{ url_for('tasks.tasks') }}">Задачи</a></li>
+            <li><a href="#">Контакты</a></li>
+            <li><a href="#">Почта</a></li>
+        </ul>
+
+        <div class="logout-container">
+            <a href="{{ url_for('auth.logout') }}" class="logout-btn">Выйти из профиля</a>
+        </div>
+    </div>
+
+    <div class="main-content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="flash {{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST" action="{{ url_for('users.update_profile') }}" enctype="multipart/form-data" class="profile-form-container">
+            <div class="photo-container">
+                <div class="photo-upload" id="photoUpload">
+                    {% if user.profile_picture %}
+                        <img src="data:image/jpeg;base64,{{ user.profile_picture | b64encode }}" alt="Profile Photo">
+                    {% else %}
+                        <div class="photo-placeholder">Добавить фото</div>
+                    {% endif %}
+                    <input type="file" id="photoInput" name="profile_picture" accept="image/*">
+                </div>
+            </div>
+
+            <div class="form-container">
+                <div class="form-group">
+                    <label for="fullname">ФИО</label>
+                    <input type="text" id="fullname" name="user_name"
+                           value="{{ user.user_name }}" placeholder="Введите ваше ФИО">
+                </div>
+
+                <div class="form-group">
+                    <label for="position">Должность</label>
+                    <input type="text" id="position" name="job_title"
+                           value="{{ user.job_title }}" placeholder="Введите вашу должность">
+                </div>
+
+                <div class="form-group">
+                    <label for="about">Краткая информация о себе</label>
+                    <textarea id="about" name="user_info"
+                              placeholder="Расскажите немного о себе">{{ user.user_info }}</textarea>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="save-btn">Сохранить</button>
+                    <a href="{{ url_for('users.change_password') }}" class="change-password">Сменить пароль</a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        // Обработка загрузки фото (предпросмотр)
+        const photoUpload = document.getElementById('photoUpload');
+        const photoInput = document.getElementById('photoInput');
+        const photoPlaceholder = document.querySelector('.photo-placeholder');
+
+        photoInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const existingImg = photoUpload.querySelector('img');
+                    if (existingImg) {
+                        existingImg.src = event.target.result;
+                    } else {
+                        if (photoPlaceholder) {
+                            photoUpload.removeChild(photoPlaceholder);
+                        }
+                        const img = document.createElement('img');
+                        img.src = event.target.result;
+                        photoUpload.appendChild(img);
+                    }
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+    </script>
+</body>
+</html>

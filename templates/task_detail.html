@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Задача</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            background-color: #D9D9D9;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 255px;
+            background-color: white;
+            height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+            position: fixed;
+            left: 0;
+            top: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .nav-links {
+            list-style: none;
+            padding: 0;
+            margin-top: 20px;
+            flex-grow: 1;
+        }
+
+        .nav-links li {
+            margin-bottom: 0px;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: black;
+            font-size: 18px;
+            font-weight: bold;
+            display: block;
+            padding: 8px 0;
+        }
+
+        .nav-links a:hover {
+            color: #555;
+        }
+
+        .logout-container {
+            margin-top: auto;
+            padding-bottom: 20px;
+        }
+
+        .logout-container a {
+            color: black;
+        }
+
+        .logout-container a:hover {
+            color: #4F4F4F;
+        }
+
+        .main-content {
+            flex: 1;
+            margin-left: 255px;
+            padding: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .task-container {
+            background-color: white;
+            width: 100%;
+            max-width: 800px;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .task-field {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .task-field:last-child {
+            border-bottom: none;
+        }
+
+        .field-label {
+            font-weight: bold;
+            color: #4F4F4F;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .field-value {
+            color: #333;
+            font-size: 16px;
+        }
+
+        .buttons-container {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .btn-accept {
+            background-color: #4F4F4F;
+            color: white;
+        }
+
+        .btn-accept:hover {
+            background-color: #3a3a3a;
+        }
+
+        .btn-done {
+            background-color: #2e7d32;
+            color: white;
+        }
+
+        .btn-back {
+            background-color: #f5f5f5;
+            color: #333;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-back:hover {
+            background-color: #e0e0e0;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 14px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        .status-new {
+            background-color: #DFE1E6;
+            color: #42526E;
+        }
+
+        .status-in-progress {
+            background-color: #DEEBFF;
+            color: #0747A6;
+        }
+
+        .status-done {
+            background-color: #E3FCEF;
+            color: #006644;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        /* Стили для flash-сообщений */
+        .flash-messages {
+            position: absolute;
+            top: 20px;
+            width: 100%;
+            max-width: 796px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 100;
+        }
+
+        .flash {
+            padding: 15px;
+            border-radius: 9px;
+            text-align: center;
+            font-size: 16px;
+            font-weight: bold;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .flash.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .flash.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <ul class="nav-links">
+            <li><a href="{{ url_for('users.my_profile') }}">Моя страница</a></li>
+            <li><a href="#">Встречи</a></li>
+            <li><a href="{{ url_for('tasks.tasks') }}">Задачи</a></li>
+            <li><a href="#">Контакты</a></li>
+            <li><a href="#">Почта</a></li>
+        </ul>
+
+        <div class="logout-container">
+            <a href="{{ url_for('auth.logout') }}" class="logout-btn">Выйти из профиля</a>
+        </div>
+    </div>
+
+    <div class="main-content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="flash {{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+        <div class="task-container">
+            <div class="task-field">
+                <span class="field-label">Тема:</span>
+                <span class="field-value">{{ task.task_name }}
+                    <span class="status-badge status-{{ task.status|replace(' ', '-')|lower }}">
+                        {{ task.status }}
+                    </span>
+                </span>
+            </div>
+
+            <div class="task-field">
+                <span class="field-label">Описание:</span>
+                <div class="field-value">{{ task.description }}</div>
+            </div>
+
+            <div class="task-field">
+                <span class="field-label">Исполнитель:</span>
+                <div class="field-value">
+                    <div class="user-info">
+                        {% if task.executor.profile_picture %}
+                            <img src="data:image/jpeg;base64,{{ task.executor.profile_picture | b64encode }}"
+                                 class="user-avatar" alt="{{ task.executor.user_name }}">
+                        {% else %}
+                            <img src="https://cdn-icons-png.freepik.com/256/12123/12123184.png?semt=ais_hybrid" class="user-avatar" alt="Аватар">
+                        {% endif %}
+                        <span>{{ task.executor.user_name }} ({{ task.executor.job_title }})</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="task-field">
+                <span class="field-label">Приоритет:</span>
+                <span class="field-value">{{ task.priority }}</span>
+            </div>
+
+            <div class="task-field">
+                <span class="field-label">Выполнить до:</span>
+                <span class="field-value">{{ task.term.strftime('%d.%m.%Y') }}</span>
+            </div>
+
+            <div class="task-field">
+                <span class="field-label">Создатель:</span>
+                <div class="field-value">
+                    <div class="user-info">
+                        {% if task.creator.profile_picture %}
+                            <img src="data:image/jpeg;base64,{{ task.creator.profile_picture | b64encode }}"
+                                 class="user-avatar" alt="{{ task.creator.user_name }}">
+                        {% else %}
+                            <img src="https://cdn-icons-png.freepik.com/256/12123/12123184.png?semt=ais_hybrid" class="user-avatar" alt="Аватар">
+                        {% endif %}
+                        <span>{{ task.creator.user_name }} ({{ task.creator.job_title }})</span>
+                    </div>
+                </div>
+            </div>
+
+                <!-- Блок отладки -->
+<!--            <div style="background: #f0f0f0; padding: 10px; margin: 10px 0; border: 1px solid #ccc;">-->
+<!--                <p style="font-weight: bold; margin: 0 0 5px 0;">DEBUG INFO:</p>-->
+<!--                <p style="margin: 2px 0;">Task Status: {{ task.status }}</p>-->
+<!--                <p style="margin: 2px 0;">Current User ID: {{ current_user.id }}</p>-->
+<!--                <p style="margin: 2px 0;">Executor ID: {{ task.executor_id }}</p>-->
+<!--                <p style="margin: 2px 0; font-weight: bold; color: {% if task.status == 'in_progress' and current_user.id == task.executor_id %}green{% else %}red{% endif %}">-->
+<!--                    Should Show Done Button: {{ 'YES' if task.status == 'in_progress' and current_user.id == task.executor_id else 'NO' }}-->
+<!--                </p>-->
+<!--            </div>-->
+
+            <div class="buttons-container">
+                {% if current_user.id == task.executor_id and task.status == 'new' %}
+                    <button id="acceptBtn" class="btn btn-accept">Принять задачу</button>
+                {% endif %}
+
+                {% if current_user.id == task.executor_id and task.status == 'in_progress' %}
+                    <button id="doneBtn" class="btn btn-done">Завершить задачу</button>
+                {% endif %}
+
+                <a href="{{ url_for('tasks.tasks') }}" class="btn btn-back">Назад к списку</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Обработка кнопки "Принять задачу"
+        document.getElementById('acceptBtn')?.addEventListener('click', async function() {
+            try {
+                const response = await fetch("{{ url_for('tasks.update_task_status', task_id=task.id) }}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        status: 'in_progress'
+                    })
+                });
+
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    alert('Ошибка при обновлении статуса задачи');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Произошла ошибка');
+            }
+        });
+
+        // Обработка кнопки "Завершить задачу"
+        document.getElementById('doneBtn')?.addEventListener('click', async function() {
+            if (confirm('Вы уверены, что хотите отметить задачу как выполненную?')) {
+                try {
+                    const response = await fetch("{{ url_for('tasks.update_task_status', task_id=task.id) }}", {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            status: 'done'
+                        })
+                    });
+
+                    if (response.ok) {
+                        location.reload();
+                    } else {
+                        alert('Ошибка при обновлении статуса задачи');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Произошла ошибка');
+                }
+            }
+        });
+    </script>
+</body>
+</html>

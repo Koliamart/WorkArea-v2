@@ -1,0 +1,412 @@
+<!-- suppress ALL -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Список задач</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            background-color: #D9D9D9;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 255px;
+            background-color: white;
+            height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+            position: fixed;
+            left: 0;
+            top: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .nav-links {
+            list-style: none;
+            padding: 0;
+            margin-top: 20px;
+            flex-grow: 1;
+        }
+
+        .nav-links li {
+            margin-bottom: 0px;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: black;
+            font-size: 18px;
+            font-weight: bold;
+            display: block;
+            padding: 8px 0;
+        }
+
+        .nav-links a:hover {
+            color: #555;
+        }
+
+        .logout-container {
+            margin-top: auto;
+            padding-bottom: 20px;
+        }
+
+        .logout-container a {
+            color: black;
+        }
+
+        .logout-container a:hover {
+            color: #4F4F4F;
+        }
+
+        .main-content {
+            flex: 1;
+            margin-left: 255px;
+            padding: 40px;
+            box-sizing: border-box;
+            min-height: 100vh;
+        }
+
+        .tasks-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .tasks-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #4F4F4F;
+        }
+
+        .create-task-btn {
+            background-color: #4F4F4F;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        /* Стили для фильтров */
+        .filters-container {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .filter-label {
+            font-size: 14px;
+            color: #4F4F4F;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .filter-select {
+            padding: 8px 12px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            font-size: 14px;
+            min-width: 150px;
+        }
+
+        .my-tasks-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: auto;
+        }
+
+        .apply-filters-btn {
+            background-color: #4F4F4F;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            align-self: flex-end;
+            margin-left: 15px;
+        }
+
+        .tasks-table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        .tasks-table th {
+            background-color: #f4f5f7;
+            text-align: left;
+            padding: 15px;
+            font-weight: bold;
+            color: #4F4F4F;
+        }
+
+        .tasks-table td {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .tasks-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .tasks-table tr:hover {
+            background-color: #f9f9f9;
+        }
+
+        .task-link {
+            color: #0052CC;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .task-link:hover {
+            text-decoration: underline;
+        }
+
+        .task-status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .status-new {
+            background-color: #DFE1E6;
+            color: #42526E;
+        }
+
+        .status-in-progress {
+            background-color: #DEEBFF;
+            color: #0747A6;
+        }
+
+        .status-done {
+            background-color: #E3FCEF;
+            color: #006644;
+        }
+
+        .task-priority {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 14px;
+        }
+
+        .priority-low {
+            background-color: #E3FCEF;
+            color: #006644;
+        }
+
+        .priority-medium {
+            background-color: #DEEBFF;
+            color: #0747A6;
+        }
+
+        .priority-high {
+            background-color: #FFEBE6;
+            color: #BF2600;
+        }
+
+        .priority-critical {
+            background-color: #FF5630;
+            color: white;
+        }
+
+        .user-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .flash-message {
+            width: 100%;
+            max-width: 600px;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            font-size: 16px;
+            text-align: center;
+            box-sizing: border-box;
+        }
+
+        .flash-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .flash-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .flash-info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .flash-warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <ul class="nav-links">
+            <li><a href="{{ url_for('users.my_profile') }}">Моя страница</a></li>
+            <li><a href="#">Встречи</a></li>
+            <li><a href="{{ url_for('tasks.tasks') }}">Задачи</a></li>
+            <li><a href="#">Контакты</a></li>
+            <li><a href="#">Почта</a></li>
+        </ul>
+
+        <div class="logout-container">
+            <a href="{{ url_for('auth.logout') }}" class="logout-btn">Выйти из профиля</a>
+        </div>
+    </div>
+
+    <div class="main-content">
+            <!-- Блок для flash сообщений -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash-message flash-{{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="tasks-header">
+            <h1 class="tasks-title">Список задач</h1>
+            <a href="{{ url_for('tasks.create_task') }}" class="create-task-btn">+ Создать задачу</a>
+        </div>
+
+        <!-- Фильтры -->
+        <form method="GET" action="{{ url_for('tasks.tasks') }}" class="filters-container">
+            <div class="filter-group">
+                <label for="status" class="filter-label">Статус</label>
+                <select id="status" name="status" class="filter-select">
+                    <option value="">Все статусы</option>
+                    <!--suppress HtmlUnknownAttribute -->
+                    <option value="new" {% if request.args.get('status') == 'new' %}selected{% endif %}>К выполнению</option>
+                    <!--suppress HtmlUnknownAttribute -->
+                    <option value="in_progress" {% if request.args.get('status') == 'in_progress' %}selected{% endif %}>В работе</option>
+                    <!--suppress HtmlUnknownAttribute -->
+                    <option value="done" {% if request.args.get('status') == 'done' %}selected{% endif %}>Готова</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="priority" class="filter-label">Приоритет</label>
+                <select id="priority" name="priority" class="filter-select">
+                    <option value="">Все приоритеты</option>
+                    <!--suppress HtmlUnknownAttribute -->
+                    <option value="low" {% if request.args.get('priority') == 'low' %}selected{% endif %}>Низкий</option>
+                    <!--suppress HtmlUnknownAttribute -->
+                    <option value="medium" {% if request.args.get('priority') == 'medium' %}selected{% endif %}>Средний</option>
+                    <!--suppress HtmlUnknownAttribute -->
+                    <option value="high" {% if request.args.get('priority') == 'high' %}selected{% endif %}>Высокий</option>
+                    <!--suppress HtmlUnknownAttribute -->
+                    <option value="critical" {% if request.args.get('priority') == 'critical' %}selected{% endif %}>Критический</option>
+                </select>
+            </div>
+
+            <div class="my-tasks-checkbox">
+                <!--suppress HtmlUnknownAttribute -->
+                <input type="checkbox" id="my_tasks" name="my_tasks"
+                       {% if request.args.get('my_tasks') %}checked{% endif %}>
+                <label for="my_tasks">Мои задачи</label>
+            </div>
+
+            <button type="submit" class="apply-filters-btn">Применить</button>
+        </form>
+
+        <table class="tasks-table">
+            <thead>
+                <tr>
+                    <th>Ключ</th>
+                    <th>Задача</th>
+                    <th>Статус</th>
+                    <th>Приоритет</th>
+                    <th>Исполнитель</th>
+                    <th>Срок</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for task in tasks %}
+                <tr>
+                    <td>
+                        <a href="{{ url_for('tasks.task_detail', task_id=task.id) }}" class="task-link">
+                            TASK-{{ task.id }}
+                        </a>
+                    </td>
+                    <td>
+                        <a href="{{ url_for('tasks.task_detail', task_id=task.id) }}" class="task-link">
+                            {{ task.task_name }}
+                        </a>
+                    </td>
+                    <td>
+                        <span class="task-status status-{{ task.status|replace(' ', '-')|lower }}">
+                            {{ task.status }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="task-priority priority-{{ task.priority|lower }}">
+                            {{ task.priority }}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="user-info">
+                            {% if task.executor.profile_picture %}
+                                <img src="data:image/jpeg;base64,{{ task.executor.profile_picture | b64encode }}"
+                                     class="user-avatar" alt="{{ task.executor.user_name }}">
+                            {% else %}
+                                <img src="https://cdn-icons-png.freepik.com/256/12123/12123184.png?semt=ais_hybrid" class="user-avatar" alt="Аватар">
+                            {% endif %}
+                            {{ task.executor.user_name }}
+                        </div>
+                    </td>
+                    <td>{{ task.term.strftime('%d.%m.%Y') if task.term else '-' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Создание встречи</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-color: #D9D9D9;
+            min-height: 100vh;
+            display: flex;
+        }
+
+        /* Сайдбар */
+        .sidebar {
+            width: 255px;
+            background-color: white;
+            height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+            position: fixed;
+            left: 0;
+            top: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .nav-links {
+            list-style: none;
+            padding: 0;
+            margin-top: 20px;
+            flex-grow: 1;
+        }
+
+        .nav-links li {
+            margin-bottom: 0px;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: black;
+            font-size: 18px;
+            font-weight: bold;
+            display: block;
+            padding: 8px 0;
+        }
+
+        .nav-links a:hover {
+            color: #555;
+        }
+
+        .logout-container {
+            margin-top: auto;
+            padding-bottom: 20px;
+        }
+
+        .logout-container a {
+            color: black;
+            text-decoration: none;
+        }
+
+        .logout-container a:hover {
+            color: #4F4F4F;
+        }
+
+        /* Основное содержимое */
+        .main-content {
+            flex: 1;
+            margin-left: 255px;
+            width: calc(100% - 255px);
+            box-sizing: border-box;
+            min-height: 100vh;
+            padding: 40px 40px 40px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .page-title {
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #4F4F4F;
+        }
+
+        .form-container {
+            width: 100%;
+            max-width: 600px;
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #4F4F4F;
+            font-size: 16px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+
+        textarea.form-control {
+            height: 100px;
+            resize: vertical;
+        }
+
+        /* Поля даты и времени в одной строке */
+        .datetime-row {
+            display: flex;
+            gap: 15px;
+        }
+
+        .datetime-row .form-group {
+            flex: 1;
+        }
+
+        /* Участники */
+        .participants-input {
+            margin-bottom: 10px;
+        }
+
+        .participants-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .participant-tag {
+            display: flex;
+            align-items: center;
+            background-color: #f0f0f0;
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-size: 14px;
+        }
+
+        .delete-tag-btn {
+            background: none;
+            border: none;
+            color: #ff0000;
+            cursor: pointer;
+            margin-left: 6px;
+            padding: 0;
+            line-height: 1;
+        }
+
+        /* Кнопки */
+        .form-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .btn-primary {
+            background-color: #4F4F4F;
+            color: white;
+            border: none;
+        }
+
+        .btn-link {
+            color: #4F4F4F;
+            background: none;
+            border: none;
+            text-decoration: none;
+        }
+
+        .btn-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <ul class="nav-links">
+            <li><a href="{{ url_for('users.my_profile') }}">Моя страница</a></li>
+            <li><a href="#">Встречи</a></li>
+            <li><a href="{{ url_for('tasks.tasks') }}">Задачи</a></li>
+            <li><a href="#">Контакты</a></li>
+            <li><a href="#">Почта</a></li>
+        </ul>
+
+        <div class="logout-container">
+            <a href="{{ url_for('auth.logout') }}">Выйти из профиля</a>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="page-title">Создание встречи</div>
+
+        <form method="POST" action="{{ url_for('users.update_profile') }}" class="form-container">
+            <div class="form-group">
+                <label for="meeting-title">Тема</label>
+                <input type="text" id="meeting-title" name="meeting_name" class="form-control" value="{{ meetings.meetings_name }}">
+            </div>
+
+            <div class="form-group">
+                <label>Участники</label>
+                <input type="text" id="participants-input" class="form-control participants-input" placeholder="Введите участника и нажмите Enter">
+                <div class="participants-container" id="participants-container">
+                    <!-- Здесь будут отображаться добавленные участники -->
+                </div>
+            </div>
+
+            <div class="datetime-row">
+                <div class="form-group">
+                    <label for="start-date">Дата начала</label>
+                    <input type="date" id="start-date" name="start_date" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="start-time">Время начала</label>
+                    <input type="time" id="start-time" name="start_time" class="form-control">
+                </div>
+            </div>
+
+            <div class="datetime-row">
+                <div class="form-group">
+                    <label for="end-date">Дата окончания</label>
+                    <input type="date" id="end-date" name="end_date" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="end-time">Время окончания</label>
+                    <input type="time" id="end-time" name="end_time" class="form-control">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="description">Описание</label>
+                <textarea id="description" name="description" class="form-control">{{ meetings.description }}</textarea>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Создать</button>
+                <a href="#" class="btn btn-link">Назад</a>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Управление участниками
+            const participantsInput = document.getElementById('participants-input');
+            const participantsContainer = document.getElementById('participants-container');
+
+            participantsInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const value = participantsInput.value.trim();
+                    if (value) {
+                        addParticipant(value);
+                        participantsInput.value = '';
+                    }
+                }
+            });
+
+            function addParticipant(name) {
+                const tag = document.createElement('div');
+                tag.className = 'participant-tag';
+
+                const nameSpan = document.createElement('span');
+                nameSpan.textContent = name;
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'delete-tag-btn';
+                deleteBtn.innerHTML = '&times;';
+                deleteBtn.onclick = function() {
+                    tag.remove();
+                };
+
+                tag.appendChild(nameSpan);
+                tag.appendChild(deleteBtn);
+                participantsContainer.appendChild(tag);
+            }
+
+            // Валидация дат и времени
+            const startDateInput = document.getElementById('start-date');
+            const startTimeInput = document.getElementById('start-time');
+            const endDateInput = document.getElementById('end-date');
+            const endTimeInput = document.getElementById('end-time');
+
+            // Установка текущей даты и времени
+            function setCurrentDateTime() {
+                const now = new Date();
+
+                // Форматирование даты в YYYY-MM-DD
+                const year = now.getFullYear();
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const day = String(now.getDate()).padStart(2, '0');
+                const currentDate = `${year}-${month}-${day}`;
+
+                // Форматирование времени в HH:MM
+                const hours = String(now.getHours()).padStart(2, '0');
+                const minutes = String(now.getMinutes()).padStart(2, '0');
+                const currentTime = `${hours}:${minutes}`;
+
+                // Установка минимальных значений
+                startDateInput.min = currentDate;
+                startTimeInput.min = currentTime;
+
+                // Если время в прошлом, устанавливаем текущее
+                if (startDateInput.value === currentDate) {
+                    startTimeInput.min = currentTime;
+                }
+            }
+
+            // Инициализация текущей даты/времени
+            setCurrentDateTime();
+
+            // Обновление минимального времени при изменении даты начала
+            startDateInput.addEventListener('change', function() {
+                const now = new Date();
+                const currentDate = now.toISOString().split('T')[0];
+
+                if (startDateInput.value === currentDate) {
+                    // Если выбрана сегодняшняя дата, устанавливаем минимальное время
+                    const hours = String(now.getHours()).padStart(2, '0');
+                    const minutes = String(now.getMinutes()).padStart(2, '0');
+                    startTimeInput.min = `${hours}:${minutes}`;
+
+                    // Если текущее время больше установленного, обновляем его
+                    if (startTimeInput.value && startTimeInput.value < startTimeInput.min) {
+                        startTimeInput.value = startTimeInput.min;
+                    }
+                } else {
+                    // Если выбрана будущая дата, снимаем ограничение на время
+                    startTimeInput.min = '00:00';
+                }
+
+                // Обновление даты окончания
+                endDateInput.min = startDateInput.value;
+
+                // Если дата окончания раньше даты начала, сбрасываем ее
+                if (endDateInput.value && endDateInput.value < startDateInput.value) {
+                    endDateInput.value = startDateInput.value;
+
+                    // Если даты одинаковые, проверяем время
+                    if (startDateInput.value === endDateInput.value) {
+                        endTimeInput.min = startTimeInput.value;
+                        if (endTimeInput.value && endTimeInput.value < startTimeInput.value) {
+                            endTimeInput.value = startTimeInput.value;
+                        }
+                    }
+                }
+            });
+
+            // Обновление времени начала
+            startTimeInput.addEventListener('change', function() {
+                if (startDateInput.value === endDateInput.value) {
+                    endTimeInput.min = startTimeInput.value;
+
+                    // Если время окончания раньше времени начала, сбрасываем его
+                    if (endTimeInput.value && endTimeInput.value < startTimeInput.value) {
+                        endTimeInput.value = startTimeInput.value;
+                    }
+                }
+            });
+
+            // Обновление даты окончания
+            endDateInput.addEventListener('change', function() {
+                if (startDateInput.value === endDateInput.value) {
+                    endTimeInput.min = startTimeInput.value;
+                } else {
+                    endTimeInput.min = '00:00';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

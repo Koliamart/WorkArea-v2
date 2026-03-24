@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Рабочая зона</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            background-color: #D9D9D9;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 255px;
+            background-color: white;
+            height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+            position: fixed;
+            left: 0;
+            top: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .nav-links {
+            list-style: none;
+            padding: 0;
+            margin-top: 20px;
+            flex-grow: 1;
+        }
+
+        .nav-links li {
+            margin-bottom: 0px;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: black;
+            font-size: 18px;
+            font-weight: bold;
+            display: block;
+            padding: 8px 0;
+        }
+
+        .nav-links a:hover {
+            color: #555;
+        }
+
+        .logout-container {
+            margin-top: auto;
+            padding-bottom: 20px;
+        }
+
+        .logout-container a {
+            color: black
+        }
+
+        .main-content {
+            flex: 1;
+            padding-left: 295px;
+            width: 100%;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            /* Изменено с center на flex-start для выравнивания вверху */
+            justify-content: flex-start;
+            align-items: center;
+            text-align: center;
+            min-height: 100vh;
+            /* Добавим отступ сверху */
+            padding-top: 60px;
+        }
+
+        .welcome-message {
+            max-width: 800px;
+            width: 100%;
+            padding: 0 20px;
+        }
+
+        .welcome-message h1 {
+            font-size: 30px;
+            margin-bottom: 20px;
+            line-height: 1.3;
+        }
+
+        .welcome-message p {
+            font-size: 24px;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <ul class="nav-links">
+            <li><a href="{{ url_for('users.my_profile') }}">Моя страница</a></li>
+            <li><a href="#">Встречи</a></li>
+            <li><a href="{{ url_for('tasks.tasks') }}">Задачи</a></li>
+            <li><a href="#">Контакты</a></li>
+            <li><a href="#">Почта</a></li>
+        </ul>
+
+        <div class="logout-container">
+            <a href="{{ url_for('auth.logout') }}" class="logout-btn">Выйти из профиля</a>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="welcome-message">
+            <h1>{{ user.user_name }}, добро пожаловать в рабочую зону</h1>
+            <p>Начните работу прямо сейчас</p>
+        </div>
+    </div>
+</body>
+</html>
