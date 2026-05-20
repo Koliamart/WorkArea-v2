@@ -66,3 +66,16 @@ class Task(db.Model):
     term = db.Column(db.Date, nullable=False)
     status = db.Column(db.String(20), default='new')
     created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
+
+
+# Новая таблица для refresh-токенов
+# Для версии 2
+# CREATE TABLE refresh_tokens (
+#     id INTEGER PRIMARY KEY AUTOINCREMENT,
+#     user_id INTEGER NOT NULL,
+#     token VARCHAR(500) NOT NULL UNIQUE,
+#     expires_at DATETIME NOT NULL,
+#     revoked BOOLEAN DEFAULT FALSE,
+#     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+#     FOREIGN KEY (user_id) REFERENCES users(id)
+# );

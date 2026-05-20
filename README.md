@@ -35,5 +35,21 @@ python main.py
 - `templates/` - HTML шаблоны
 - `instance/` - база данных SQLite
 
+# WorkArea v2 — Task Manager API
 
+## Описание
+REST API для системы управления задачами. Реализована полная аутентификация (JWT), CRUD для задач, управление профилем и аватарами.
+
+## Технологии
+- Python 3.11 / Flask
+- JWT (Bearer token)
+- SQLAlchemy + SQLite/PostgreSQL
+- OpenAPI 3.0 (Swagger)
+
+## Документация API
+Спецификация OpenAPI: [openapi3_0.yaml](./openapi3_0.yaml)
+
+## Локальный запуск
+```bash
+docker run -p 8888:8080 swaggerapi/swagger-editor
 

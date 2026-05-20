@@ -18,11 +18,11 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
+            position: relative;
         }
 
         .reg-container {
             width: 796px;
-            height: 750px; /* Высота контейнера */
             background-color: #FBFBFB;
             border-radius: 62px;
             padding: 54px;
@@ -33,14 +33,14 @@
 
         .reg-header {
             text-align: center;
-            margin-bottom: 20px; /* Уменьшено с 45px */
-            margin-top: -10px; /* Новое свойство */
+            margin-bottom: 20px;
+            margin-top: -10px;
         }
 
         .reg-header h2 {
             font-size: 24px;
             color: #4F4F4F;
-            margin-bottom: 5px; /* Уменьшено с 9px */
+            margin-bottom: 5px;
         }
 
         .reg-header p {
@@ -52,7 +52,6 @@
             display: flex;
             flex-direction: column;
             gap: 27px;
-            flex-grow: 1;
         }
 
         .form-group {
@@ -95,8 +94,25 @@
             font-weight: normal;
         }
 
+        /* Юридический блок перед кнопкой */
+        .legal-note {
+            margin: 0px 0 27px 0;
+            text-align: center;
+            font-size: 13px;
+            color: #555;
+            line-height: 1.4;
+        }
+
+        .legal-note a {
+            color: #4F4F4F;
+            text-decoration: underline;
+        }
+
+        .legal-note a:hover {
+            color: #000;
+        }
+
         .form-footer {
-            margin-top: auto;
             display: flex;
             flex-direction: column;
             gap: 27px;
@@ -123,23 +139,26 @@
 
         /* Стили для flash-сообщений */
         .flash-messages {
-            position: absolute;
+            position: fixed;
             top: 20px;
-            width: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: auto;
             max-width: 796px;
             display: flex;
             flex-direction: column;
             gap: 10px;
-            z-index: 100;
+            z-index: 1000;
         }
 
         .flash {
-            padding: 15px;
+            padding: 15px 25px;
             border-radius: 9px;
             text-align: center;
             font-size: 16px;
             font-weight: bold;
             animation: slideIn 0.3s ease-out;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
 
         .flash.success {
@@ -152,6 +171,17 @@
             background-color: #f8d7da;
             color: #721c24;
             border: 1px solid #f5c6cb;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
         }
     </style>
 </head>
@@ -173,35 +203,43 @@
         </div>
 
         <form class="reg-form" method="POST" action="{{ url_for('auth.registration') }}">
-    <div class="form-group">
-        <input type="text" id="name" name="user_name" placeholder="Введите ваше ФИО" required>
-    </div>
+            <div class="form-group">
+                <input type="text" id="name" name="user_name" placeholder="Введите ваше ФИО" required>
+            </div>
 
-    <div class="form-group">
-        <input type="text" id="position" name="job_title" placeholder="Введите вашу должность" required>
-    </div>
+            <div class="form-group">
+                <input type="text" id="position" name="job_title" placeholder="Введите вашу должность" required>
+            </div>
 
-    <div class="form-group">
-        <input type="text" id="login" name="login" placeholder="Придумайте логин" required>
-    </div>
+            <div class="form-group">
+                <input type="text" id="login" name="login" placeholder="Придумайте логин" required>
+            </div>
 
-    <div class="form-group">
-        <input type="password" id="password" name="password" pattern = "^(?=.*\d)(?=.*[a-zA-Z])[a-zA-Z0-9]{8,}$" placeholder="Придумайте пароль" required
-        title="Пароль должен содержать минимум 8 символов, 1 цифру и 1 букву">
-    </div>
+            <div class="form-group">
+                <input type="password" id="password" name="password" pattern="^(?=.*\d)(?=.*[a-zA-Z])[a-zA-Z0-9]{8,}$" placeholder="Придумайте пароль" required
+                title="Пароль должен содержать минимум 8 символов, 1 цифру и 1 букву">
+            </div>
 
-    <div class="form-group">
-        <input type="password" id="confirm-password" name="confirm_password" pattern = "^(?=.*\d)(?=.*[a-zA-Z])[a-zA-Z0-9]{8,}$" placeholder="Повторите пароль" required>
-    </div>
+            <div class="form-group">
+                <input type="password" id="confirm-password" name="confirm_password" pattern="^(?=.*\d)(?=.*[a-zA-Z])[a-zA-Z0-9]{8,}$" placeholder="Повторите пароль" required>
+            </div>
 
             <div class="show-password">
                 <input type="checkbox" id="show-password">
                 <label for="show-password">Показать пароль</label>
             </div>
 
+            <!-- ЮРИДИЧЕСКИЙ БЛОК -->
+            <div class="legal-note">
+                Нажимая «Зарегистрироваться», вы принимаете
+                <a href="{{ url_for('auth.terms') }}" target="_blank">Пользовательское соглашение</a>
+                и даёте согласие на
+                <a href="{{ url_for('auth.privacy') }}" target="_blank">обработку персональных данных</a>.
+            </div>
+
             <div class="form-footer">
                 <button type="submit" class="submit-btn">Зарегистрироваться</button>
-                <a href="http://127.0.0.1:5000/" class="back-btn">Назад</a>
+                <a href="https://work-area.ru/" class="back-btn">Назад</a>
             </div>
         </form>
     </div>

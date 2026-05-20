@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="api-token" content="{{ api_token }}">
+    <meta name="task-id" content="{{ task.id }}">
     <title>Задача</title>
     <style>
         body {
@@ -216,16 +218,29 @@
             border: 1px solid #f5c6cb;
         }
 
+                /* Делаем неактивные ссылки тусклыми */
+        .nav-links a.disabled,
+        .logout-container a.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+                /* Убираем эффект hover для неактивных ссылок */
+        .nav-links a.disabled:hover {
+            color: black;
+            opacity: 0.5;
+        }
     </style>
 </head>
 <body>
     <div class="sidebar">
         <ul class="nav-links">
             <li><a href="{{ url_for('users.my_profile') }}">Моя страница</a></li>
-            <li><a href="#">Встречи</a></li>
+            <li><a href="#" class="disabled">Встречи (разработка)</a></li>
             <li><a href="{{ url_for('tasks.tasks') }}">Задачи</a></li>
-            <li><a href="#">Контакты</a></li>
-            <li><a href="#">Почта</a></li>
+            <li><a href="#" class="disabled">Контакты (разработка)</a></li>
+            <li><a href="#" class="disabled">Почта (разработка)</a></li>
         </ul>
 
         <div class="logout-container">
@@ -324,53 +339,52 @@
     </div>
 
     <script>
-        // Обработка кнопки "Принять задачу"
+        const apiToken = document.querySelector('meta[name="api-token"]').content;
+        const taskId = document.querySelector('meta[name="task-id"]').content;
+
+        async function patchTaskStatus(status) {
+            const response = await fetch(`/v2/tasks/${taskId}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiToken}`,
+                },
+                body: JSON.stringify({ status }),
+            });
+
+            if (response.ok) {
+                location.reload();
+                return;
+            }
+
+            let message = 'Ошибка при обновлении статуса задачи';
+            try {
+                const data = await response.json();
+                if (data.message) {
+                    message = data.message;
+                }
+            } catch (e) { /* ignore */ }
+            alert(message);
+        }
+
         document.getElementById('acceptBtn')?.addEventListener('click', async function() {
             try {
-                const response = await fetch("{{ url_for('tasks.update_task_status', task_id=task.id) }}", {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        status: 'in_progress'
-                    })
-                });
-
-                if (response.ok) {
-                    location.reload();
-                } else {
-                    alert('Ошибка при обновлении статуса задачи');
-                }
+                await patchTaskStatus('in_progress');
             } catch (error) {
                 console.error('Error:', error);
                 alert('Произошла ошибка');
             }
         });
 
-        // Обработка кнопки "Завершить задачу"
         document.getElementById('doneBtn')?.addEventListener('click', async function() {
-            if (confirm('Вы уверены, что хотите отметить задачу как выполненную?')) {
-                try {
-                    const response = await fetch("{{ url_for('tasks.update_task_status', task_id=task.id) }}", {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            status: 'done'
-                        })
-                    });
-
-                    if (response.ok) {
-                        location.reload();
-                    } else {
-                        alert('Ошибка при обновлении статуса задачи');
-                    }
-                } catch (error) {
-                    console.error('Error:', error);
-                    alert('Произошла ошибка');
-                }
+            if (!confirm('Вы уверены, что хотите отметить задачу как выполненную?')) {
+                return;
+            }
+            try {
+                await patchTaskStatus('done');
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Произошла ошибка');
             }
         });
     </script>

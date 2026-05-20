@@ -1,0 +1,773 @@
+openapi: 3.0.0
+info:
+  title: Task Manager API
+  version: 2.0.0
+  description: Новая версия API для системы управления задачами
+servers:
+  - url: https://api.example.com/v2
+    description: Production
+  - url: http://localhost:5000/v2
+    description: Development
+
+paths:
+  /auth/registr/:
+    post:
+      summary: Регистрация пользователя
+      tags:
+        - Auth
+      operationId: createUserId
+      requestBody: 
+        required: true
+        content: 
+          application/json: 
+            schema: 
+              $ref: '#/components/schemas/Registration'
+      responses:
+        "201":
+          description: Успешная регистрация 
+          content: 
+            application/json: 
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: "Регистрация прошла успешно!"
+        "400": 
+          description: Ошибка валидации (некорректные данные)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientError'
+        "409": 
+          description: Пользователь с таким логином уже существует
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientError'
+  /auth/login:
+    post:
+      summary: Вход в систему и получение JWT
+      tags:
+        - Auth
+      operationId: avtorizationId
+      requestBody: 
+        required: true
+        content:
+          application/json: 
+            schema:
+              type: object
+              properties:
+                login:
+                  type: string 
+                password:
+                  type: string 
+      responses:
+        "200":
+          description: Успешная аутентификация
+          content: 
+            application/json: 
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        "400":
+          description: Bad Request
+          content:
+            application/json: 
+              schema:
+                $ref: '#/components/schemas/ClientError'
+        "401": 
+          description: Unauthorized (неверный логин/пароль)
+          content:
+            application/json: 
+              schema:
+                $ref: '#/components/schemas/ClientError'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+  /auth/change-password:
+    post:
+      summary: Смена пароля текущего пользователя
+      tags:
+        - Auth
+      operationId: changePasswordId
+      security: 
+        - bearerAuth: []
+      requestBody: 
+        required: true
+        content:
+          application/json: 
+            schema:
+              type: object 
+              required:
+                - current_password
+                - confirm_password
+                - new_password
+              properties: 
+                current_password:
+                  type: string
+                confirm_password:
+                  type: string 
+                new_password:
+                  type: string
+                  minLength: 8
+                  pattern: '^(?=.*\d)(?=.*[a-zA-Z])[a-zA-Z0-9]{8,}$'
+      responses:
+        "200":
+          description: Пароль успешно изменён
+        "400":
+          description: Ошибка валидации (некорректный новый пароль или поля не совпадают)
+        "401":
+          description: Неверный текущий пароль или не авторизован
+  /users/me:
+    get:
+      summary: Получение профиля текущего пользователя
+      tags:
+        - Users
+      operationId: getUserMeId
+      security: 
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Информация о пользователе 
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        "400":
+          description: Bad Request
+          content:
+            application/json: 
+              schema:
+                $ref: '#/components/schemas/ClientError'
+        "401": 
+          description: Unauthorized (неверный логин/пароль)
+          content:
+            application/json: 
+              schema:
+                $ref: '#/components/schemas/ClientError'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+    patch:
+      summary: Частичное обновление личного профиля пользователя
+      tags:
+        - Users
+      operationId: updateMeProfileId
+      security: 
+        - bearerAuth: []
+      requestBody: 
+        required: true
+        content: 
+          application/json: 
+            schema:
+              $ref: '#/components/schemas/PatchMeProfile'
+      responses: 
+        "200":
+          description: Успешный ответ с частично обновленным профилем
+          content: 
+            application/json: 
+              schema:
+                $ref: '#/components/schemas/User'
+        "400":
+          description: Bad Request
+          content:
+            application/json: 
+              schema:
+                $ref: '#/components/schemas/ClientError'
+        "401":
+          description: Не авторизован
+          content:
+            application/json: 
+              schema:
+                $ref: '#/components/schemas/ClientError'
+  /users/me/avatar:
+    get:
+      summary: Получение аватара текущего пользователя
+      tags: 
+        - Users
+      operationId: getMeAvatarId
+      security: 
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Успешный ответ
+          content: 
+            image/jpeg: 
+              schema: 
+                type: string 
+                format: binary 
+            image/png: 
+              schema: 
+                type: string 
+                format: binary 
+            image/gif: 
+              schema: 
+                type: string 
+                format: binary 
+        "401":
+          description: Не авторизован
+        "404":
+          description: Аватар не загружен
+  /users/{id}/avatar:
+    get:
+      summary: Получение аватара пользователя по id
+      tags:
+        - Users
+      operationId: getUserAvatarId
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id 
+          in: path
+          required: true
+          schema:
+            type: integer 
+      responses:
+        "200":
+          description: Успешный ответ
+          content:
+            image/jpeg: 
+              schema:
+                type: string
+                format: binary
+        "401":
+          description: Не авторизован
+        "404":
+          description: Аватар не загружен или пользователь не найден
+  /tasks/{taskId}:
+    get:
+      summary: Получение конкретной задачи
+      tags:
+        - Tasks 
+      operationId: getTaskId
+      security:
+        - bearerAuth: []
+      parameters: 
+        - name: taskId
+          in: path 
+          required: true
+          description: Идентификатор конкретной задачи
+          schema:
+            type: integer
+            example: 32
+      responses:
+        "200":
+          description: Успешный ответ с конкретной задачей
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        "400":
+          description: Неверный формат taskId
+          content:
+            application/json: 
+              schema:
+                $ref: '#/components/schemas/ClientError'
+        "401":
+          description: Не авторизован
+          content:
+            application/json: 
+              schema:
+                $ref: '#/components/schemas/ClientError'
+        "404":
+          description: Задача не найдена
+          content:
+            application/json: 
+              schema:
+                $ref: '#/components/schemas/ClientError'
+    put:
+      summary: Полное обновление задачи
+      tags: 
+        - Tasks
+      operationId: fullUpdateTaskId
+      security: 
+        - bearerAuth: []
+      parameters: 
+        - name: taskId
+          in: path 
+          required: true
+          description: Идентификатор конкретной задачи
+          schema:
+            type: integer
+            example: 32
+      requestBody: 
+        required: true
+        content: 
+          application/json: 
+            schema:
+              $ref: '#/components/schemas/CreateTaskRequest'
+      responses:
+        "200":
+          description: Успешный ответ с конкретной полностью обновленной задачей
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        "400":
+          description: Неверный формат taskId
+          content:
+            application/json: 
+              schema:
+                $ref: '#/components/schemas/ClientError'
+        "401":
+          description: Не авторизован
+          content:
+            application/json: 
+              schema:
+                $ref: '#/components/schemas/ClientError'
+        "404":
+          description: Задача не найдена
+          content:
+            application/json: 
+              schema:
+                $ref: '#/components/schemas/ClientError'
+    patch:
+      summary: Частичное обновление задачи
+      tags:
+        - Tasks
+      operationId: updateTaskId
+      security: 
+        - bearerAuth: []
+      parameters: 
+        - name: taskId
+          in: path 
+          required: true
+          description: Идентификатор конкретной задачи
+          schema:
+            type: integer
+            example: 32
+      requestBody: 
+        required: true
+        content: 
+          application/json: 
+            schema:
+              $ref: '#/components/schemas/PatchTaskRequest'
+      responses:
+        "200":
+          description: Успешный ответ с частично обновленной задачей
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        "400":
+          description: Неверный формат taskId
+          content:
+            application/json: 
+              schema:
+                $ref: '#/components/schemas/ClientError'
+        "401":
+          description: Не авторизован
+          content:
+            application/json: 
+              schema:
+                $ref: '#/components/schemas/ClientError'
+        "404":
+          description: Задача не найдена
+          content:
+            application/json: 
+              schema:
+                $ref: '#/components/schemas/ClientError'
+    delete: 
+      summary: Удаление конкретной задачи
+      tags:
+        - Tasks
+      operationId: deleteTaskId
+      security: 
+        - bearerAuth: []
+      parameters: 
+        - name: taskId
+          in: path 
+          required: true
+          description: Идентификатор конкретной задачи для удаления
+          schema:
+            type: integer
+            example: 32
+      responses:
+        "204":
+          description: Задача успешно удалена
+        "400":
+          description: Неверный формат taskId
+          content:
+            application/json: 
+              schema:
+                $ref: '#/components/schemas/ClientError'
+        "401":
+          description: Не авторизован
+          content:
+            application/json: 
+              schema:
+                $ref: '#/components/schemas/ClientError'
+        "404":
+          description: Задача не найдена
+          content:
+            application/json: 
+              schema:
+                $ref: '#/components/schemas/ClientError'
+  /tasks:
+    get:
+      summary: Получение списка задач с фильтрацией
+      tags:
+        - Tasks 
+      operationId: getFilterTasksId
+      security:
+        - bearerAuth: []
+      parameters: 
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [new, in_progress, done]
+        - name: priority
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [low, medium, high, critical]
+        - name: my_task
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: false
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 20
+            minimum: 0
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+      responses: 
+        "200":
+          description: Успешный ответ со списком задач
+          content:
+            application/json: 
+              schema: 
+                $ref: '#/components/schemas/TaskListResponse' 
+        "400":
+          description: Неверные параметры
+          content:
+            application/json: 
+              schema:
+                $ref: '#/components/schemas/ClientError'
+        "401":
+          description: Не авторизован
+          content:
+            application/json: 
+              schema:
+                $ref: '#/components/schemas/ClientError'
+    post:
+      summary: Создание задачи
+      tags:
+        - Tasks 
+      operationId: createTaskId
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true 
+        content: 
+          application/json: 
+            schema:
+              $ref: '#/components/schemas/CreateTaskRequest'
+      responses:
+        "201":
+          description: Успешный ответ с конкретной задачей
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        "400":
+          description: Неверные параметры
+          content:
+            application/json: 
+              schema:
+                $ref: '#/components/schemas/ClientError'
+        "401":
+          description: Не авторизован
+          content:
+            application/json: 
+              schema:
+                $ref: '#/components/schemas/ClientError'
+
+components:
+  schemas:
+    User:
+      type: object
+      required:
+        - id
+        - user_name
+        - job_title
+      properties:
+        id:
+          type: integer
+          example: 321
+          description: Идентификатор пользователя
+        user_name:
+          type: string
+          example: "Иванов Иван Иванович"
+          description: Полное ФИО пользователя
+        job_title:
+          type: string
+          example: "Системный аналитик"
+          description: Должность пользователя
+        user_info:
+          type: string
+          example: "Руководитель отдела аналитики"
+    PatchMeProfile:
+      type: object
+      properties:
+        user_name:
+          type: string
+          description: Полное ФИО пользователя
+        job_title:
+          type: string
+          description: Должность пользователя
+        user_info:
+          type: string
+    BaseError:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: integer
+          description: HTTP-код ошибки
+        message:
+          type: string 
+          description: Человеко-читаемое описание ошибки 
+        details:
+          type: object 
+          description: Дополнительная информация
+          properties:
+            field:
+              type: string 
+            reason:
+              type: string 
+    ClientError:
+      allOf: 
+        - $ref: '#/components/schemas/BaseError'
+        - type: object
+          properties:
+            code:
+              enum: [400, 401, 403, 404, 409]
+    ServerError:
+      allOf: 
+        - $ref: '#/components/schemas/BaseError'
+        - type: object
+          properties:
+            code:
+              enum: [500, 502, 503, 504]
+    AuthResponse:
+      type: object
+      required:
+        - access_token
+        - token_type
+        - expires_in
+      properties:
+        access_token:
+          type: string 
+          description: JWT токен для доступа к API
+        token_type:
+          type: string
+          example: "Bearer"
+        expires_in:
+          type: integer 
+          description: Время жизни токена в секундах
+          example: 3600
+    Registration:
+      type: object 
+      required:
+        - user_name
+        - job_title
+        - login
+        - password
+        - confirm_password
+      properties:
+        user_name:
+          type: string 
+          minLength: 1
+          maxLength: 70
+          description: ФИО пользователя
+        job_title:
+          type: string 
+          minLength: 1
+          maxLength: 50
+          description: Должность пользователя
+        login:
+          type: string
+          pattern: '^[a-zA-Z0-9_-]+$'
+          minLength: 1
+          maxLength: 30
+          description: логин пользователя
+        password:
+          type: string
+          pattern: '^(?=.*\d)(?=.*[a-zA-Z])[a-zA-Z0-9]{8,}$'
+        confirm_password:
+          type: string
+          description: Должен совпадать с паролем
+    CreateTaskRequest:
+      type: object 
+      required: 
+        - task_name
+        - priority
+        - term
+        - executor_id
+      properties:
+        task_name:
+          type: string 
+          minLength: 1
+          maxLength: 100
+          example: "Разработка спецификации"
+          description: "Тема (название) задачи"
+        description: 
+          type: string
+          description: "Подробное описание задачи"
+        priority:
+          type: string 
+          enum: [low, medium, high, critical]
+          description: "Приоритет задачи (низкий, средний, высокий, критический)"
+        term:
+          type: string 
+          format: date 
+          example: 2026-12-24
+          description: "Срок выполнения задачи"
+        executor_id:
+          type: integer 
+          description: Id пользователя, который будет исполнителем
+    PatchTaskRequest:
+      type: object 
+      properties:
+        task_name:
+          type: string 
+          minLength: 1
+          maxLength: 100
+          example: "Разработка спецификации"
+          description: "Тема (название) задачи"
+        description: 
+          type: string
+          description: "Подробное описание задачи"
+        priority:
+          type: string 
+          enum: [low, medium, high, critical]
+          description: "Приоритет задачи (низкий, средний, высокий, критический)"
+        term:
+          type: string 
+          format: date 
+          example: 2026-12-24
+          description: "Срок выполнения задачи"
+        executor_id:
+          type: integer 
+          description: Id пользователя, который будет исполнителем
+    Task:
+      type: object 
+      required: 
+        - id
+        - task_name
+        - description
+        - status
+        - priority
+        - term
+        - created_at
+        - creator
+        - executor
+      properties:
+        id:
+          type: integer 
+          example: 32
+          description: Идентификатор задачи 
+        task_name:
+          type: string 
+          minLength: 1
+          maxLength: 100
+          example: "Разработка спецификации"
+          description: "Тема (название) задачи"
+        description: 
+          type: string
+          description: "Подробное описание задачи"
+        status:
+          type: string 
+          enum: [new, in_progress, done]
+          description: "Статус задачи (новая, в работе, выполнена)"
+        priority:
+          type: string 
+          enum: [low, medium, high, critical]
+          description: "Приоритет задачи (низкий, средний, высокий, критический)"
+        term:
+          type: string 
+          format: date 
+          example: 2026-12-24
+          description: "Срок выполнения задачи"
+        created_at:
+          type: string 
+          format: date-time
+          example: 2025-05-15T10:00:00z
+        creator:
+          $ref: '#/components/schemas/UserPublic'
+        executor:
+          $ref: '#/components/schemas/UserPublic'
+    TaskListResponse:
+      type: object
+      required:
+        - items
+        - total
+        - limit
+        - offset
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Task'
+        total:
+          type: integer 
+          description: Общее количество задач (без учета limit/offset)
+        limit:
+          type: integer
+        offset: 
+          type: integer 
+    UserPublic:
+      type: object 
+      required:
+        - id
+        - user_name
+        - job_title
+      properties: 
+        id:
+          type: integer
+        user_name:
+          type: string
+          minLength: 1
+          maxLength: 70
+          description: ФИО
+        job_title:
+          type: string
+          minLength: 1
+          maxLength: 50
+          example: "Системный аналитик"
+          description: Должность пользователя
+        user_info:
+          type: string 
+          maxLength: 300
+          example: "Ведущий системный аналитик отдела страхования"
+          description: Краткое описание
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+

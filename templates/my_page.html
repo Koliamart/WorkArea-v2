@@ -220,16 +220,30 @@
             color: #721c24;
             border: 1px solid #f5c6cb;
         }
+
+                 /* Делаем неактивные ссылки тусклыми */
+        .nav-links a.disabled,
+        .logout-container a.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+                /* Убираем эффект hover для неактивных ссылок */
+        .nav-links a.disabled:hover {
+            color: black;
+            opacity: 0.5;
+        }
     </style>
 </head>
 <body>
     <div class="sidebar">
         <ul class="nav-links">
             <li><a href="{{ url_for('users.my_profile') }}">Моя страница</a></li>
-            <li><a href="#">Встречи</a></li>
+            <li><a href="#" class="disabled">Встречи (разработка)</a></li>
             <li><a href="{{ url_for('tasks.tasks') }}">Задачи</a></li>
-            <li><a href="#">Контакты</a></li>
-            <li><a href="#">Почта</a></li>
+            <li><a href="#" class="disabled">Контакты (разработка)</a></li>
+            <li><a href="#" class="disabled">Почта (разработка)</a></li>
         </ul>
 
         <div class="logout-container">
