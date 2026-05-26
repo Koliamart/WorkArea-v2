@@ -1,0 +1,89 @@
+asyncapi: 3.0.0
+info:
+  title: WorkArea Events
+  version: 1.0.0
+  description: События системы управления задачами
+
+servers:
+  kafka-dev:
+    host: localhost:9092
+    protocol: kafka
+
+channels:
+  task.created:
+    address: task.created
+    description: Событие возникает при создании задачи
+    messages:
+      taskCreatedMessage:
+        $ref: '#/components/messages/TaskCreated'
+
+components:
+  messages:
+    TaskCreated:
+      contentType: application/json
+      payload:
+        type: object
+        required:
+          - id
+          - task_name
+          - priority
+          - term
+          - creator_id
+          - executor_id
+          - creator_name
+          - executor_name
+          - created_at
+        properties:
+          id:
+            type: integer
+            description: Идентификатор задачи
+          task_name:
+            type: string
+            description: Наименование задачи (тема)
+          priority:
+            type: string
+            enum: [low, medium, high, critical]
+            description: Приоритет задачи
+          term: 
+            type: string
+            format: date
+            description: Выполнить до (дедлайн)
+          creator_id:
+            type: integer
+          executor_id:
+            type: integer
+          creator_name:
+            type: string
+            description: Имя создателя задачи
+          executor_name:
+            type: string
+            description: Имя исполнителя задачи
+          created_at:
+            type: string
+            format: date-time
+            description: Дата создания
+
+operations:
+  publisherCreateTask:
+    action: send
+    summary: Публикатор созданной задачи
+    channel:
+      $ref: '#/channels/task.created'
+    messages:
+      - $ref: '#/channels/task.created/messages/taskCreatedMessage'
+
+  mailConsumerTask:
+    action: receive
+    summary: Отправляет уведомление на электронную почту (email)
+    channel:
+      $ref: '#/channels/task.created'
+    messages:
+      - $ref: '#/channels/task.created/messages/taskCreatedMessage'
+
+  logConsumerTask:
+    action: receive
+    summary: Логирует создание задачи
+    channel:
+      $ref: '#/channels/task.created'
+    messages:
+      - $ref: '#/channels/task.created/messages/taskCreatedMessage'
