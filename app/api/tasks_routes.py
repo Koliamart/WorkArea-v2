@@ -1,4 +1,7 @@
-from flask import Blueprint, g
+import importlib.util
+from pathlib import Path
+
+from flask import Blueprint, current_app, g
 from pydantic import ValidationError
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -8,10 +11,21 @@ from extensions import db
 from app.api.responses import client_error, server_error, validation_error_response
 from app.auth.jwt import jwt_required
 from app.schemas.task import CreateTaskRequest, PatchTaskRequest, Task, TaskListQuery, TaskListResponse
-from app.serializers import task_to_response
+from app.serializers import task_to_created_event, task_to_response
 from app.services import task_service
 from app.services.task_service import TaskError
 from control_db import Task as TaskModel
+
+_kafka_producer_path = (
+    Path(__file__).resolve().parents[2]
+    / 'asyncapi События системы управления задачами'
+    / 'kafka_producer.py'
+)
+_spec = importlib.util.spec_from_file_location('kafka_producer', _kafka_producer_path)
+_kafka_module = importlib.util.module_from_spec(_spec)
+assert _spec.loader is not None
+_spec.loader.exec_module(_kafka_module)
+send_task_created_event = _kafka_module.send_task_created_event
 
 bp = Blueprint('tasks', __name__, url_prefix='/tasks')
 
@@ -48,6 +62,11 @@ def create_task():
         task = task_service.create_task(g.current_user, body)
     except TaskError as exc:
         return client_error(exc.message, exc.code)
+
+    try:
+        send_task_created_event(task_to_created_event(task))
+    except Exception:
+        current_app.logger.exception('Не удалось отправить событие task.created в Kafka')
 
     return Task.model_validate(task_to_response(task)).model_dump(), 201
 

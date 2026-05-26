@@ -17,6 +17,30 @@ def user_to_response(user: User) -> dict:
     return data
 
 
+def task_to_created_event(task: Task) -> dict:
+    created = task.created_at
+    if created is not None:
+        created_at = created.isoformat()
+        if created_at.endswith('+00:00'):
+            created_at = created_at[:-6] + 'Z'
+        elif '+' not in created_at and not created_at.endswith('Z'):
+            created_at += 'Z'
+    else:
+        created_at = ''
+
+    return {
+        'id': task.id,
+        'task_name': task.task_name,
+        'priority': task.priority,
+        'term': task.term.isoformat(),
+        'creator_id': task.creator_id,
+        'executor_id': task.executor_id,
+        'creator_name': task.creator.user_name,
+        'executor_name': task.executor.user_name,
+        'created_at': created_at,
+    }
+
+
 def task_to_response(task: Task) -> dict:
     created = task.created_at
     if created is not None:

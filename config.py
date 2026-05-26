@@ -24,3 +24,8 @@ class Config:
 
     # JWT (OpenAPI bearerAuth)
     JWT_ACCESS_TOKEN_EXPIRES = int(os.environ.get('JWT_EXPIRES_IN', 3600))
+
+    # Kafka (события task.created)
+    KAFKA_HOST = os.environ.get('KAFKA_HOST', '127.0.0.1')
+    KAFKA_PORT = int(os.environ.get('KAFKA_PORT', '9092'))
+    KAFKA_TOPIC_TASK_CREATED = os.environ.get('KAFKA_TOPIC_TASK_CREATED', 'task.created')
